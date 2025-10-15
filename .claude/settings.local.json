@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(npx create-next-app:*)",
+      "Bash(npm install)",
+      "Bash(npx shadcn@latest init:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(pkill:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:ui.shadcn.com)",
+      "Bash(find:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(sudo lsof:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
