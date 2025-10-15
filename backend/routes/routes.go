@@ -24,6 +24,8 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 	authHandler := handlers.NewAuthHandler(db)
 	taskHandler := handlers.NewTaskHandler(db)
 	userHandler := handlers.NewUserHandler(db)
+	departmentHandler := handlers.NewDepartmentHandler(db)
+	projectHandler := handlers.NewProjectHandler(db)
 
 	// Public routes
 	router.GET("/health", healthHandler.HealthCheck)
@@ -68,6 +70,29 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 				users.GET("/:id", userHandler.GetUser)
 				users.PUT("/:id", userHandler.UpdateUser)
 				users.GET("/:id/tasks", userHandler.GetUserTasks)
+			}
+
+			// Department routes
+			departments := authenticated.Group("/departments")
+			{
+				departments.GET("", departmentHandler.GetDepartments)
+				departments.POST("", middleware.RequireRole("Admin"), departmentHandler.CreateDepartment)
+				departments.GET("/:id", departmentHandler.GetDepartment)
+				departments.PUT("/:id", middleware.RequireRole("Admin"), departmentHandler.UpdateDepartment)
+				departments.DELETE("/:id", middleware.RequireRole("Admin"), departmentHandler.DeleteDepartment)
+				departments.GET("/:id/users", departmentHandler.GetDepartmentUsers)
+				departments.GET("/:id/tasks", departmentHandler.GetDepartmentTasks)
+			}
+
+			// Project routes
+			projects := authenticated.Group("/projects")
+			{
+				projects.GET("", projectHandler.GetProjects)
+				projects.POST("", projectHandler.CreateProject)
+				projects.GET("/:id", projectHandler.GetProject)
+				projects.PUT("/:id", projectHandler.UpdateProject)
+				projects.DELETE("/:id", projectHandler.DeleteProject)
+				projects.GET("/:id/tasks", projectHandler.GetProjectTasks)
 			}
 		}
 	}
