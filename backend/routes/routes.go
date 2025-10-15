@@ -23,6 +23,7 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 	healthHandler := handlers.NewHealthHandler(db)
 	authHandler := handlers.NewAuthHandler(db)
 	taskHandler := handlers.NewTaskHandler(db)
+	userHandler := handlers.NewUserHandler(db)
 
 	// Public routes
 	router.GET("/health", healthHandler.HealthCheck)
@@ -58,6 +59,15 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 				tasks.PUT("/:id", taskHandler.UpdateTask)
 				tasks.PATCH("/:id/status", taskHandler.UpdateTaskStatus)
 				tasks.DELETE("/:id", taskHandler.DeleteTask)
+			}
+
+			// User routes
+			users := authenticated.Group("/users")
+			{
+				users.GET("", userHandler.GetUsers)
+				users.GET("/:id", userHandler.GetUser)
+				users.PUT("/:id", userHandler.UpdateUser)
+				users.GET("/:id/tasks", userHandler.GetUserTasks)
 			}
 		}
 	}
