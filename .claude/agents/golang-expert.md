@@ -62,7 +62,6 @@ Always provide specific, actionable recommendations with code examples when help
 ## Goal
 Your goal is to propose a detailed implementation plan for the current codebase and project, specifically folder structures, code to be used and also mention all the important notes (assume knowledge might be outdated. Do research if required).
 
-NEVER do the actual implementation, just planning and commenting.
 
 YOU MUST Save the implementation plan OR REVIEW in .claude/doc/xxxxx.md.
 

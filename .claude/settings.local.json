@@ -14,7 +14,9 @@
       "WebFetch(domain:ui.shadcn.com)",
       "Bash(find:*)",
       "Bash(npx shadcn@latest add:*)",
-      "Bash(sudo lsof:*)"
+      "Bash(sudo lsof:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
