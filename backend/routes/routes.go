@@ -22,6 +22,7 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 	// Initialize handlers
 	healthHandler := handlers.NewHealthHandler(db)
 	authHandler := handlers.NewAuthHandler(db)
+	taskHandler := handlers.NewTaskHandler(db)
 
 	// Public routes
 	router.GET("/health", healthHandler.HealthCheck)
@@ -48,13 +49,16 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 			// Auth - get current user
 			authenticated.GET("/auth/me", authHandler.Me)
 
-			// TODO: Add more protected routes here as we implement them
-			// Tasks
-			// authenticated.GET("/tasks", taskHandler.GetTasks)
-			// authenticated.POST("/tasks", taskHandler.CreateTask)
-			// authenticated.GET("/tasks/:id", taskHandler.GetTask)
-			// authenticated.PUT("/tasks/:id", taskHandler.UpdateTask)
-			// authenticated.DELETE("/tasks/:id", taskHandler.DeleteTask)
+			// Task routes
+			tasks := authenticated.Group("/tasks")
+			{
+				tasks.GET("", taskHandler.GetTasks)
+				tasks.POST("", taskHandler.CreateTask)
+				tasks.GET("/:id", taskHandler.GetTask)
+				tasks.PUT("/:id", taskHandler.UpdateTask)
+				tasks.PATCH("/:id/status", taskHandler.UpdateTaskStatus)
+				tasks.DELETE("/:id", taskHandler.DeleteTask)
+			}
 		}
 	}
 }
