@@ -137,15 +137,17 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 	// Members and Viewers can view users in their department
 	if requestUserID.(string) != userID {
 		if requestUserRole == "Manager" {
-			if requestUserDepartmentID == nil || user.DepartmentID == nil ||
-				*user.DepartmentID != requestUserDepartmentID.(string) {
+			reqDeptID, _ := requestUserDepartmentID.(*string)
+			if reqDeptID == nil || user.DepartmentID == nil ||
+				*user.DepartmentID != *reqDeptID {
 				utils.RespondError(c, http.StatusForbidden, "FORBIDDEN", "You don't have permission to view this user", nil)
 				return
 			}
 		} else if requestUserRole != "Admin" {
 			// Members and Viewers can only view users in same department
-			if requestUserDepartmentID == nil || user.DepartmentID == nil ||
-				*user.DepartmentID != requestUserDepartmentID.(string) {
+			reqDeptID, _ := requestUserDepartmentID.(*string)
+			if reqDeptID == nil || user.DepartmentID == nil ||
+				*user.DepartmentID != *reqDeptID {
 				utils.RespondError(c, http.StatusForbidden, "FORBIDDEN", "You don't have permission to view this user", nil)
 				return
 			}
@@ -278,8 +280,9 @@ func (h *UserHandler) GetUserTasks(c *gin.Context) {
 	// Managers can view tasks of users in their department
 	if requestUserID.(string) != userID && requestUserRole != "Admin" {
 		if requestUserRole == "Manager" {
-			if requestUserDepartmentID == nil || user.DepartmentID == nil ||
-				*user.DepartmentID != requestUserDepartmentID.(string) {
+			reqDeptID, _ := requestUserDepartmentID.(*string)
+			if reqDeptID == nil || user.DepartmentID == nil ||
+				*user.DepartmentID != *reqDeptID {
 				utils.RespondError(c, http.StatusForbidden, "FORBIDDEN", "You don't have permission to view this user's tasks", nil)
 				return
 			}
