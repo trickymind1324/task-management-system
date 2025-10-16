@@ -66,15 +66,22 @@ export function CreateTaskModal({ isOpen, onClose }: CreateTaskModalProps) {
 
     setIsSubmitting(true);
 
+    // Convert due_date to ISO 8601 format if provided
+    let dueDate = null;
+    if (formData.due_date) {
+      const date = new Date(formData.due_date);
+      dueDate = date.toISOString();
+    }
+
     const taskData: any = {
       title: formData.title,
       description: formData.description || null,
       priority: formData.priority,
       status: formData.status,
       assignee_ids: formData.assignees,
-      department_id: user.department_id,
+      department_id: user.department_id || null,
       project_id: null,
-      due_date: formData.due_date || null,
+      due_date: dueDate,
       source: 'GUI',
       tags: formData.tags
         ? formData.tags.split(',').map((tag) => tag.trim()).filter(Boolean)
