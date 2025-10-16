@@ -9,7 +9,7 @@ import { mockDataStore } from '@/lib/data/mock-store';
 import { cn } from '@/lib/utils/cn';
 
 interface UserAvatarProps {
-  userId: string;
+  userId: string | null | undefined;
   size?: 'sm' | 'md' | 'lg';
   showName?: boolean;
   className?: string;
@@ -32,12 +32,25 @@ const colors = [
 
 export function UserAvatar({ userId, size = 'md', showName = false, className }: UserAvatarProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    mockDataStore.getUserById(userId).then(setUser);
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    mockDataStore.getUserById(userId)
+      .then(setUser)
+      .finally(() => setIsLoading(false));
   }, [userId]);
 
-  if (!user) {
+  if (!userId || (!user && !isLoading)) {
+    return null;
+  }
+
+  if (isLoading) {
     return (
       <div className={cn('rounded-full bg-gray-300 animate-pulse', sizeClasses[size], className)} />
     );
