@@ -19,7 +19,7 @@ type User struct {
 	DepartmentID           *string        `gorm:"type:uuid" json:"department_id,omitempty"`
 	Department             *Department    `gorm:"foreignKey:DepartmentID" json:"department,omitempty"`
 	PasswordHash           *string        `gorm:"type:varchar(255)" json:"-"`
-	IsActive               bool           `gorm:"default:true" json:"is_active"`
+	IsActive               bool           `gorm:"column:active;default:true" json:"is_active"`
 	EmailVerified          bool           `gorm:"default:false" json:"email_verified"`
 	LastLogin              *time.Time     `json:"last_login,omitempty"`
 	Role                   string         `gorm:"type:varchar(20);not null;default:'Member'" json:"role"`
