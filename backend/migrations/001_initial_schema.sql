@@ -177,37 +177,53 @@ CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks
 CREATE TRIGGER update_comments_updated_at BEFORE UPDATE ON comments
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+
+-- Add human-readable codes
+ALTER TABLE departments ADD COLUMN IF NOT EXISTS code TEXT UNIQUE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS code TEXT UNIQUE;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS code TEXT UNIQUE;
+
 -- =============================================================================
 -- SEED DATA (for development/testing)
 -- =============================================================================
 
 -- Insert Departments
-INSERT INTO departments (id, name) VALUES
+INSERT INTO departments (code, name)
+VALUES
     ('dept-001', 'Marketing'),
     ('dept-002', 'Engineering'),
     ('dept-003', 'Finance')
-ON CONFLICT (name) DO NOTHING;
+ON CONFLICT (code) DO NOTHING;
 
 -- Insert Users (password: 'password' hashed with bcrypt cost 12)
--- Hash: $2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYXN8kCON8q
-INSERT INTO users (id, email, password_hash, full_name, role, department_id) VALUES
-    ('user-001', 'raghu@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYXN8kCON8q', 'Raghu', 'Admin', NULL),
-    ('user-002', 'bharath@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYXN8kCON8q', 'Bharath', 'Manager', 'dept-001'),
-    ('user-003', 'sunny@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYXN8kCON8q', 'Sunny', 'Member', 'dept-002'),
-    ('user-004', 'alex@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYXN8kCON8q', 'Alex Rivera', 'Member', 'dept-001'),
-    ('user-005', 'priya@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYXN8kCON8q', 'Priya Sharma', 'Manager', 'dept-003')
-ON CONFLICT (email) DO NOTHING;
+-- Hash: $2a$12$caS4149xz2BeKBXqkNPCeuZIuNpm9aoTq4eavRHbq54L9EIDSWy4u
+INSERT INTO users (code, email, password_hash, full_name, role, department_id)
+VALUES
+    ('user-001', 'raghu@example.com', '$2a$12$caS4149xz2BeKBXqkNPCeuZIuNpm9aoTq4eavRHbq54L9EIDSWy4u', 'Raghu', 'Admin', NULL),
+    ('user-002', 'bharath@example.com', '$2a$12$caS4149xz2BeKBXqkNPCeuZIuNpm9aoTq4eavRHbq54L9EIDSWy4u', 'Bharath', 'Manager',
+        (SELECT id FROM departments WHERE code = 'dept-001')),
+    ('user-003', 'sunny@example.com', '$2a$12$caS4149xz2BeKBXqkNPCeuZIuNpm9aoTq4eavRHbq54L9EIDSWy4u', 'Sunny', 'Member',
+        (SELECT id FROM departments WHERE code = 'dept-002')),
+    ('user-004', 'alex@example.com', '$2a$12$caS4149xz2BeKBXqkNPCeuZIuNpm9aoTq4eavRHbq54L9EIDSWy4u', 'Alex Rivera', 'Member',
+        (SELECT id FROM departments WHERE code = 'dept-001')),
+    ('user-005', 'priya@example.com', '$2a$12$caS4149xz2BeKBXqkNPCeuZIuNpm9aoTq4eavRHbq54L9EIDSWy4u', 'Priya Sharma', 'Manager',
+        (SELECT id FROM departments WHERE code = 'dept-003'))
+ON CONFLICT (code) DO NOTHING;
 
 -- Update department heads
-UPDATE departments SET head_id = 'user-002' WHERE id = 'dept-001';
-UPDATE departments SET head_id = 'user-003' WHERE id = 'dept-002';
-UPDATE departments SET head_id = 'user-005' WHERE id = 'dept-003';
+UPDATE departments SET head_id = (SELECT id FROM users WHERE code = 'user-002') WHERE code = 'dept-001';
+UPDATE departments SET head_id = (SELECT id FROM users WHERE code = 'user-003') WHERE code = 'dept-002';
+UPDATE departments SET head_id = (SELECT id FROM users WHERE code = 'user-005') WHERE code = 'dept-003';
 
 -- Insert Projects
-INSERT INTO projects (id, name, description, status, department_id, owner_id) VALUES
-    ('proj-001', 'Website Redesign', 'Complete overhaul of company website', 'Active', 'dept-001', 'user-002'),
-    ('proj-002', 'Q4 Budget Planning', 'Financial planning for Q4 2025', 'Active', 'dept-003', 'user-005')
-ON CONFLICT DO NOTHING;
-
+INSERT INTO projects (code, name, description, status, department_id, owner_id)
+VALUES
+    ('proj-001', 'Website Redesign', 'Complete overhaul of company website', 'Active',
+        (SELECT id FROM departments WHERE code = 'dept-001'),
+        (SELECT id FROM users WHERE code = 'user-002')),
+    ('proj-002', 'Q4 Budget Planning', 'Financial planning for Q4 2025', 'Active',
+        (SELECT id FROM departments WHERE code = 'dept-003'),
+        (SELECT id FROM users WHERE code = 'user-005'))
+ON CONFLICT (code) DO NOTHING;
 -- Migration complete
 SELECT 'Migration 001_initial_schema.sql completed successfully' AS status;
