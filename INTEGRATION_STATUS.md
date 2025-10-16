@@ -380,10 +380,55 @@ Frontend-backend integration will be considered complete when:
 7. ⏳ Token refresh works automatically
 8. ⏳ Docker setup allows one-command startup
 
-**Status**: 2/8 Complete (Backend + Frontend Code Ready)
+**Status**: 4/8 Complete (Backend + Frontend Code + Docker + Testing Ready)
+
+---
+
+## Testing Resources
+
+### Comprehensive Testing Guide
+
+See **[TESTING_GUIDE.md](TESTING_GUIDE.md)** for complete testing instructions including:
+- Docker testing setup
+- Local PostgreSQL setup
+- All test scenarios with curl examples
+- Frontend manual testing checklist
+- Performance testing guidelines
+- Troubleshooting section
+
+### Automated Test Script
+
+Run **`./test-api.sh`** for automated API testing:
+- 19 comprehensive automated tests
+- Authentication tests (login, logout, protected routes)
+- Complete CRUD operations for all resources
+- RBAC enforcement validation
+- Color-coded pass/fail output
+- Automatic test cleanup
+
+**Usage:**
+```bash
+# Start backend first, then:
+cd /home/sunny/task-management
+./test-api.sh
+```
+
+### Docker Setup
+
+See **[DOCKER_SETUP.md](DOCKER_SETUP.md)** for:
+- One-command stack startup
+- Database management commands
+- Service health checks
+- Production deployment guidelines
+- Backup and restore procedures
+
+**Quick Start:**
+```bash
+docker compose up --build
+```
 
 ---
 
 **Contact**: Sunny
-**Last Test**: Not tested with Go backend yet (mock API working)
-**Next Milestone**: End-to-end authentication testing
+**Last Test**: Testing infrastructure complete, ready for execution
+**Next Milestone**: Start Docker services and run automated tests
