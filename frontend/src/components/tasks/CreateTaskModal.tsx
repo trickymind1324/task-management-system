@@ -66,26 +66,19 @@ export function CreateTaskModal({ isOpen, onClose }: CreateTaskModalProps) {
 
     setIsSubmitting(true);
 
-    const taskData: CreateTaskDTO = {
+    const taskData: any = {
       title: formData.title,
-      description: formData.description,
+      description: formData.description || null,
       priority: formData.priority,
       status: formData.status,
-      creator: user.id,
-      assignees: formData.assignees,
-      department: user.department,
-      due_date: formData.due_date ? new Date(formData.due_date) : null,
-      project: null,
-      dependencies: [],
-      blocks: [],
-      parent_task: null,
-      source: 'GUI' as const,
-      attachments: [],
+      assignee_ids: formData.assignees,
+      department_id: user.department_id,
+      project_id: null,
+      due_date: formData.due_date || null,
+      source: 'GUI',
       tags: formData.tags
         ? formData.tags.split(',').map((tag) => tag.trim()).filter(Boolean)
         : [],
-      confidence_score: null,
-      metadata: {},
     };
 
     try {
