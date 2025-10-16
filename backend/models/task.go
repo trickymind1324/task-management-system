@@ -20,7 +20,7 @@ type Task struct {
 	// User relationships
 	CreatorID                string         `gorm:"type:uuid;not null" json:"creator_id"`
 	Creator                  *User          `gorm:"foreignKey:CreatorID" json:"creator,omitempty"`
-	Assignees                pq.StringArray `gorm:"type:uuid[];default:'{}'" json:"assignee_ids"`
+	Assignees                pq.StringArray `gorm:"-" json:"assignee_ids"`
 
 	// Organization
 	DepartmentID             *string        `gorm:"type:uuid" json:"department_id,omitempty"`
