@@ -26,28 +26,35 @@ func NewTaskHandler(db *gorm.DB) *TaskHandler {
 type CreateTaskRequest struct {
 	Title       string    `json:"title" binding:"required,max=255"`
 	Description *string   `json:"description"`
-	Status      string    `json:"status" binding:"omitempty,oneof=To Do In Progress In Review Blocked Done"`
-	Priority    string    `json:"priority" binding:"omitempty,oneof=Low Medium High Urgent"`
+	Status      string    `json:"status"`
+	Priority    string    `json:"priority"`
 	AssigneeIDs []string  `json:"assignee_ids"`
 	DepartmentID *string  `json:"department_id"`
 	ProjectID   *string   `json:"project_id"`
 	DueDate     *string   `json:"due_date"` // ISO 8601 format
 	Tags        []string  `json:"tags"`
-	Source      string    `json:"source" binding:"omitempty,oneof=GUI Email API Document NLP"`
+	Source      string    `json:"source"`
 }
 
 // UpdateTaskRequest represents the task update request body
 type UpdateTaskRequest struct {
 	Title       *string   `json:"title" binding:"omitempty,max=255"`
 	Description *string   `json:"description"`
-	Status      *string   `json:"status" binding:"omitempty,oneof=To Do In Progress In Review Blocked Done"`
-	Priority    *string   `json:"priority" binding:"omitempty,oneof=Low Medium High Urgent"`
+	Status      *string   `json:"status"`
+	Priority    *string   `json:"priority"`
 	AssigneeIDs []string  `json:"assignee_ids"`
 	DepartmentID *string  `json:"department_id"`
 	ProjectID   *string   `json:"project_id"`
 	DueDate     *string   `json:"due_date"`
 	Tags        []string  `json:"tags"`
 }
+
+// Valid values for validation
+var (
+	validStatuses  = map[string]bool{"To Do": true, "In Progress": true, "In Review": true, "Blocked": true, "Done": true}
+	validPriorities = map[string]bool{"Low": true, "Medium": true, "High": true, "Urgent": true}
+	validSources   = map[string]bool{"GUI": true, "Email": true, "API": true, "Document": true, "NLP": true}
+)
 
 // GetTasks returns a paginated list of tasks with filters
 func (h *TaskHandler) GetTasks(c *gin.Context) {
@@ -201,6 +208,34 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		return
 	}
 
+	// Validate and set defaults
+	status := "To Do"
+	if req.Status != "" {
+		if !validStatuses[req.Status] {
+			utils.RespondError(c, http.StatusBadRequest, "VALIDATION_ERROR", "Invalid status value", nil)
+			return
+		}
+		status = req.Status
+	}
+
+	priority := "Medium"
+	if req.Priority != "" {
+		if !validPriorities[req.Priority] {
+			utils.RespondError(c, http.StatusBadRequest, "VALIDATION_ERROR", "Invalid priority value", nil)
+			return
+		}
+		priority = req.Priority
+	}
+
+	source := "GUI"
+	if req.Source != "" {
+		if !validSources[req.Source] {
+			utils.RespondError(c, http.StatusBadRequest, "VALIDATION_ERROR", "Invalid source value", nil)
+			return
+		}
+		source = req.Source
+	}
+
 	// Parse due date if provided
 	var dueDate *time.Time
 	if req.DueDate != nil && *req.DueDate != "" {
@@ -210,20 +245,6 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 			return
 		}
 		dueDate = &parsed
-	}
-
-	// Set defaults
-	status := "To Do"
-	if req.Status != "" {
-		status = req.Status
-	}
-	priority := "Medium"
-	if req.Priority != "" {
-		priority = req.Priority
-	}
-	source := "GUI"
-	if req.Source != "" {
-		source = req.Source
 	}
 
 	// Create task
@@ -330,6 +351,10 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 		task.Description = req.Description
 	}
 	if req.Status != nil {
+		if !validStatuses[*req.Status] {
+			utils.RespondError(c, http.StatusBadRequest, "VALIDATION_ERROR", "Invalid status value", nil)
+			return
+		}
 		task.Status = *req.Status
 		// Set completion date if status is Done
 		if *req.Status == "Done" && task.CompletionDate == nil {
@@ -338,6 +363,10 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 		}
 	}
 	if req.Priority != nil {
+		if !validPriorities[*req.Priority] {
+			utils.RespondError(c, http.StatusBadRequest, "VALIDATION_ERROR", "Invalid priority value", nil)
+			return
+		}
 		task.Priority = *req.Priority
 	}
 	if req.DepartmentID != nil {
@@ -450,10 +479,16 @@ func (h *TaskHandler) UpdateTaskStatus(c *gin.Context) {
 	taskID := c.Param("id")
 
 	var req struct {
-		Status string `json:"status" binding:"required,oneof=To Do In Progress In Review Blocked Done"`
+		Status string `json:"status" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondError(c, http.StatusBadRequest, "VALIDATION_ERROR", "Invalid status", nil)
+		return
+	}
+
+	// Validate status
+	if !validStatuses[req.Status] {
+		utils.RespondError(c, http.StatusBadRequest, "VALIDATION_ERROR", "Invalid status value", nil)
 		return
 	}
 
