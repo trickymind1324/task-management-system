@@ -263,8 +263,11 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 
 	// If no department specified, use user's department
 	if task.DepartmentID == nil && userDepartmentID != nil {
-		depID := userDepartmentID.(string)
-		task.DepartmentID = &depID
+		// userDepartmentID is *string from JWT claims
+		deptIDPtr, ok := userDepartmentID.(*string)
+		if ok && deptIDPtr != nil {
+			task.DepartmentID = deptIDPtr
+		}
 	}
 
 	// Start transaction
@@ -546,8 +549,9 @@ func canAccessTask(task models.Task, userID, userRole string, userDepartmentID i
 
 	// Managers can access tasks in their department
 	if userRole == "Manager" {
-		if userDepartmentID != nil && task.DepartmentID != nil {
-			return *task.DepartmentID == userDepartmentID.(string)
+		deptIDPtr, ok := userDepartmentID.(*string)
+		if ok && deptIDPtr != nil && task.DepartmentID != nil {
+			return *task.DepartmentID == *deptIDPtr
 		}
 	}
 
@@ -555,7 +559,8 @@ func canAccessTask(task models.Task, userID, userRole string, userDepartmentID i
 	if task.CreatorID == userID {
 		return true
 	}
-	if userDepartmentID != nil && task.DepartmentID != nil && *task.DepartmentID == userDepartmentID.(string) {
+	deptIDPtr, ok := userDepartmentID.(*string)
+	if ok && deptIDPtr != nil && task.DepartmentID != nil && *task.DepartmentID == *deptIDPtr {
 		return true
 	}
 
@@ -576,8 +581,9 @@ func canModifyTask(task models.Task, userID, userRole string, userDepartmentID i
 
 	// Managers can modify tasks in their department
 	if userRole == "Manager" {
-		if userDepartmentID != nil && task.DepartmentID != nil {
-			return *task.DepartmentID == userDepartmentID.(string)
+		deptIDPtr, ok := userDepartmentID.(*string)
+		if ok && deptIDPtr != nil && task.DepartmentID != nil {
+			return *task.DepartmentID == *deptIDPtr
 		}
 	}
 
