@@ -46,13 +46,28 @@ export function UserAvatar({ userId, size = 'md', showName = false, className }:
       .finally(() => setIsLoading(false));
   }, [userId]);
 
-  if (!userId || (!user && !isLoading)) {
+  if (!userId) {
     return null;
   }
 
   if (isLoading) {
     return (
       <div className={cn('rounded-full bg-gray-300 animate-pulse', sizeClasses[size], className)} />
+    );
+  }
+
+  if (!user) {
+    return (
+      <div
+        className={cn(
+          'rounded-full flex items-center justify-center text-white font-medium bg-gray-400',
+          sizeClasses[size],
+          className
+        )}
+        title="Unknown user"
+      >
+        ?
+      </div>
     );
   }
 
