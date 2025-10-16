@@ -127,9 +127,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Find user by email
+	// Find user by email and explicitly select password_hash
 	var user models.User
-	if err := h.db.Where("email = ?", strings.ToLower(req.Email)).First(&user).Error; err != nil {
+	if err := h.db.Select("*").Where("email = ?", strings.ToLower(req.Email)).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			utils.RespondError(c, http.StatusUnauthorized, "INVALID_CREDENTIALS", "Invalid email or password", nil)
 			return
