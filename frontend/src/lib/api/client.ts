@@ -14,6 +14,7 @@ import {
   TaskFilters,
   APIResponse,
 } from '@/types';
+import { authService } from '../auth/auth';
 
 class APIError extends Error {
   constructor(
@@ -27,33 +28,6 @@ class APIError extends Error {
   }
 }
 
-class TokenManager {
-  private static ACCESS_TOKEN_KEY = 'access_token';
-  private static REFRESH_TOKEN_KEY = 'refresh_token';
-
-  static getAccessToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(this.ACCESS_TOKEN_KEY);
-  }
-
-  static getRefreshToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
-  }
-
-  static setTokens(accessToken: string, refreshToken: string): void {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(this.ACCESS_TOKEN_KEY, accessToken);
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
-  }
-
-  static clearTokens(): void {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem(this.ACCESS_TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-  }
-}
-
 async function apiRequest<T>(
   url: string,
   options: RequestInit = {}
@@ -62,7 +36,7 @@ async function apiRequest<T>(
   const timeoutId = setTimeout(() => controller.abort(), HTTP_CONFIG.timeout);
 
   try {
-    const token = TokenManager.getAccessToken();
+    const token = authService.getAccessToken();
     const headers: HeadersInit = {
       ...HTTP_CONFIG.headers,
       ...options.headers,
@@ -126,95 +100,8 @@ async function apiRequest<T>(
 }
 
 export class ApiClient {
-  // Authentication methods
-  async login(email: string, password: string): Promise<{ user: User; accessToken: string; refreshToken: string }> {
-    const response = await apiRequest<{ user: User; access_token: string; refresh_token: string }>(
-      API_ENDPOINTS.auth.login,
-      {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      }
-    );
-
-    TokenManager.setTokens(response.access_token, response.refresh_token);
-
-    return {
-      user: response.user,
-      accessToken: response.access_token,
-      refreshToken: response.refresh_token,
-    };
-  }
-
-  async register(userData: {
-    email: string;
-    password: string;
-    full_name: string;
-    role?: string;
-    department_id?: string;
-  }): Promise<{ user: User; accessToken: string; refreshToken: string }> {
-    const response = await apiRequest<{ user: User; access_token: string; refresh_token: string }>(
-      API_ENDPOINTS.auth.register,
-      {
-        method: 'POST',
-        body: JSON.stringify(userData),
-      }
-    );
-
-    TokenManager.setTokens(response.access_token, response.refresh_token);
-
-    return {
-      user: response.user,
-      accessToken: response.access_token,
-      refreshToken: response.refresh_token,
-    };
-  }
-
-  async logout(): Promise<void> {
-    try {
-      await apiRequest(API_ENDPOINTS.auth.logout, {
-        method: 'POST',
-      });
-    } finally {
-      TokenManager.clearTokens();
-    }
-  }
-
-  async getCurrentUser(): Promise<User | null> {
-    try {
-      return await apiRequest<User>(API_ENDPOINTS.auth.me);
-    } catch (error) {
-      if (error instanceof APIError && error.status === 401) {
-        TokenManager.clearTokens();
-        return null;
-      }
-      throw error;
-    }
-  }
-
-  async refreshToken(): Promise<{ accessToken: string; refreshToken: string } | null> {
-    try {
-      const refreshToken = TokenManager.getRefreshToken();
-      if (!refreshToken) return null;
-
-      const response = await apiRequest<{ access_token: string; refresh_token: string }>(
-        API_ENDPOINTS.auth.refresh,
-        {
-          method: 'POST',
-          body: JSON.stringify({ refresh_token: refreshToken }),
-        }
-      );
-
-      TokenManager.setTokens(response.access_token, response.refresh_token);
-
-      return {
-        accessToken: response.access_token,
-        refreshToken: response.refresh_token,
-      };
-    } catch (error) {
-      TokenManager.clearTokens();
-      return null;
-    }
-  }
+  // Note: Authentication methods are handled by authService
+  // This client focuses on resource management (tasks, users, etc.)
 
   // Task methods
   async getTasks(filters?: TaskFilters): Promise<Task[]> {
