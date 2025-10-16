@@ -126,7 +126,7 @@ export function TaskDetailPanel() {
     try {
       await apiClient.addComment(task.task_id, {
         task_id: task.task_id,
-        author: user.user_id,
+        author: user.id,
         content: newComment.trim(),
       });
 
@@ -164,7 +164,7 @@ export function TaskDetailPanel() {
     return (editedTask[field] ?? task[field]) as Task[K];
   };
 
-  const creator = allUsers.find(u => u.user_id === task.creator);
+  const creator = allUsers.find(u => u.id === task.creator);
 
   return (
     <div
@@ -284,14 +284,14 @@ export function TaskDetailPanel() {
           {isEditing ? (
             <div className="mt-2 space-y-2 border border-slate-300 rounded-md p-3 max-h-48 overflow-y-auto bg-white">
               {allUsers.map((u) => (
-                <label key={u.user_id} className="flex items-center gap-3 cursor-pointer hover:bg-slate-100 p-2 rounded">
+                <label key={u.id} className="flex items-center gap-3 cursor-pointer hover:bg-slate-100 p-2 rounded">
                   <input
                     type="checkbox"
-                    checked={getFieldValue('assignees').includes(u.user_id)}
-                    onChange={() => toggleAssignee(u.user_id)}
+                    checked={getFieldValue('assignees').includes(u.id)}
+                    onChange={() => toggleAssignee(u.id)}
                     className="rounded border-slate-300"
                   />
-                  <UserAvatar userId={u.user_id} size="sm" />
+                  <UserAvatar userId={u.id} size="sm" />
                   <span className="text-sm text-slate-900">{u.full_name}</span>
                 </label>
               ))}
@@ -302,7 +302,7 @@ export function TaskDetailPanel() {
                 <p className="text-sm text-slate-600">No assignees</p>
               ) : (
                 task.assignees.map((userId) => {
-                  const assignee = allUsers.find(u => u.user_id === userId);
+                  const assignee = allUsers.find(u => u.id === userId);
                   return assignee ? (
                     <div key={userId} className="flex items-center gap-2">
                       <UserAvatar userId={userId} size="sm" />
@@ -352,7 +352,7 @@ export function TaskDetailPanel() {
             <div className="mt-1 flex items-center gap-2">
               {creator && (
                 <>
-                  <UserAvatar userId={creator.user_id} size="sm" />
+                  <UserAvatar userId={creator.id} size="sm" />
                   <span className="text-sm text-slate-900">{creator.full_name}</span>
                 </>
               )}
@@ -368,7 +368,7 @@ export function TaskDetailPanel() {
           <Label className="text-slate-900">Comments ({task.comments.length})</Label>
           <div className="mt-3 space-y-4">
             {task.comments.map((comment) => {
-              const author = allUsers.find(u => u.user_id === comment.author);
+              const author = allUsers.find(u => u.id === comment.author);
               return (
                 <div key={comment.comment_id} className="flex gap-3">
                   <UserAvatar userId={comment.author} size="sm" />

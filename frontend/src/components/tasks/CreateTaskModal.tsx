@@ -71,7 +71,7 @@ export function CreateTaskModal({ isOpen, onClose }: CreateTaskModalProps) {
       description: formData.description,
       priority: formData.priority,
       status: formData.status,
-      creator: user.user_id,
+      creator: user.id,
       assignees: formData.assignees,
       department: user.department,
       due_date: formData.due_date ? new Date(formData.due_date) : null,
@@ -454,14 +454,14 @@ export function CreateTaskModal({ isOpen, onClose }: CreateTaskModalProps) {
           <Label className="text-slate-900">Assign to</Label>
           <div className="mt-2 space-y-2 border border-slate-300 rounded-md p-3 max-h-48 overflow-y-auto bg-white">
             {allUsers.map((u) => (
-              <label key={u.user_id} className="flex items-center gap-3 cursor-pointer hover:bg-slate-100 p-2 rounded">
+              <label key={u.id} className="flex items-center gap-3 cursor-pointer hover:bg-slate-100 p-2 rounded">
                 <input
                   type="checkbox"
-                  checked={formData.assignees.includes(u.user_id)}
-                  onChange={() => toggleAssignee(u.user_id)}
+                  checked={formData.assignees.includes(u.id)}
+                  onChange={() => toggleAssignee(u.id)}
                   className="rounded border-slate-300"
                 />
-                <UserAvatar userId={u.user_id} size="sm" />
+                <UserAvatar userId={u.id} size="sm" />
                 <div className="flex-1 min-w-0">
                   <span className="text-sm text-slate-900">{u.full_name}</span>
                   <span className="text-xs text-slate-600 ml-2">({u.role})</span>

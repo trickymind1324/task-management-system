@@ -67,7 +67,7 @@ export function Sidebar() {
       ),
       filter: () => {
         clearAllFilters();
-        if (user) setFilters({ assignees: [user.user_id] });
+        if (user) setFilters({ assignees: [user.id] });
       }
     },
     {

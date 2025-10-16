@@ -99,7 +99,7 @@ export function Header() {
               <p className="text-sm font-medium text-slate-900">{user.full_name}</p>
               <p className="text-xs text-slate-500">{user.role}</p>
             </div>
-            <UserAvatar userId={user.user_id} size="md" />
+            <UserAvatar userId={user.id} size="md" />
           </div>
 
           {/* Logout */}

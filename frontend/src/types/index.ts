@@ -108,13 +108,14 @@ export interface NotificationSettings {
 }
 
 export interface User {
-  user_id: string;
+  id: string;
   email: string;
   username: string;
   full_name: string;
   avatar_url: string | null;
   job_title: string | null;
-  department: string | null;
+  department_id: string | null;
+  department?: any;
   is_active: boolean;
   email_verified: boolean;
   last_login: Date | null;
@@ -122,8 +123,8 @@ export interface User {
   permissions: string[];
   created_at: Date;
   updated_at: Date;
-  preferences: UserPreferences;
-  notification_settings: NotificationSettings;
+  preferences?: any;
+  notification_settings?: any;
 }
 
 // ============================================================================

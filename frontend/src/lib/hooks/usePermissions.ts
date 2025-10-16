@@ -41,7 +41,7 @@ export function usePermissions() {
       user.role,
       taskCreator,
       taskDepartment,
-      user.user_id,
+      user.id,
       user.department
     );
   };
@@ -56,7 +56,7 @@ export function usePermissions() {
       user.role,
       taskCreator,
       taskDepartment,
-      user.user_id,
+      user.id,
       user.department
     );
   };
