@@ -11,7 +11,7 @@ import (
 
 type Task struct {
 	ID                       string         `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	TaskID                   string         `gorm:"type:varchar(50);uniqueIndex" json:"task_id"`
+	TaskID                   string         `gorm:"-" json:"task_id,omitempty"`
 	Title                    string         `gorm:"type:varchar(500);not null" json:"title"`
 	Description              *string        `gorm:"type:text" json:"description,omitempty"`
 	Status                   string         `gorm:"type:varchar(20);not null;default:'To Do'" json:"status"`
