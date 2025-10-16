@@ -34,25 +34,25 @@ type Task struct {
 
 	// Source tracking
 	Source                   string         `gorm:"type:varchar(20);not null;default:'GUI'" json:"source"`
-	SourceEmailID            *string        `gorm:"type:varchar(255)" json:"source_email_id,omitempty"`
-	SourceDocumentID         *string        `gorm:"type:varchar(255)" json:"source_document_id,omitempty"`
+	SourceEmailID            *string        `gorm:"-" json:"source_email_id,omitempty"`
+	SourceDocumentID         *string        `gorm:"-" json:"source_document_id,omitempty"`
 
 	// Metadata
 	Tags                     pq.StringArray `gorm:"type:text[];default:'{}'" json:"tags"`
 	Attachments              pq.StringArray `gorm:"type:text[];default:'{}'" json:"attachments"`
 	ConfidenceScore          *float64       `gorm:"type:decimal(3,2)" json:"confidence_score,omitempty"`
-	Metadata                 string         `gorm:"type:jsonb;default:'{}'" json:"metadata,omitempty"`
+	Metadata                 string         `gorm:"type:jsonb" json:"metadata,omitempty"`
 
-	// Recurring task fields
-	IsRecurring              bool           `gorm:"default:false" json:"is_recurring"`
-	RecurrencePattern        *string        `gorm:"type:jsonb" json:"recurrence_pattern,omitempty"`
-	RecurrenceParentID       *string        `gorm:"type:uuid" json:"recurrence_parent_id,omitempty"`
-	RecurrenceParent         *Task          `gorm:"foreignKey:RecurrenceParentID" json:"recurrence_parent,omitempty"`
-	NextOccurrence           *time.Time     `json:"next_occurrence,omitempty"`
-	SkipDates                pq.StringArray `gorm:"type:text[];default:'{}'" json:"skip_dates"`
-	RecurrenceEndDate        *time.Time     `json:"recurrence_end_date,omitempty"`
-	RecurrenceCount          *int           `json:"recurrence_count,omitempty"`
-	RecurrenceGeneratedCount int            `gorm:"default:0" json:"recurrence_generated_count"`
+	// Recurring task fields (not yet implemented in database)
+	IsRecurring              bool           `gorm:"-" json:"is_recurring,omitempty"`
+	RecurrencePattern        *string        `gorm:"-" json:"recurrence_pattern,omitempty"`
+	RecurrenceParentID       *string        `gorm:"-" json:"recurrence_parent_id,omitempty"`
+	RecurrenceParent         *Task          `gorm:"-" json:"recurrence_parent,omitempty"`
+	NextOccurrence           *time.Time     `gorm:"-" json:"next_occurrence,omitempty"`
+	SkipDates                pq.StringArray `gorm:"-" json:"skip_dates,omitempty"`
+	RecurrenceEndDate        *time.Time     `gorm:"-" json:"recurrence_end_date,omitempty"`
+	RecurrenceCount          *int           `gorm:"-" json:"recurrence_count,omitempty"`
+	RecurrenceGeneratedCount int            `gorm:"-" json:"recurrence_generated_count,omitempty"`
 
 	// Timestamps
 	CreatedAt                time.Time      `gorm:"default:now()" json:"created_at"`
