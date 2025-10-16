@@ -138,7 +138,6 @@ func (h *TaskHandler) GetTasks(c *gin.Context) {
 	var tasks []models.Task
 	if err := query.
 		Preload("Creator").
-		Preload("Assignees").
 		Preload("Department").
 		Preload("Project").
 		Order(sortBy + " " + sortOrder).
@@ -159,7 +158,6 @@ func (h *TaskHandler) GetTask(c *gin.Context) {
 	var task models.Task
 	if err := h.db.
 		Preload("Creator").
-		Preload("Assignees").
 		Preload("Department").
 		Preload("Project").
 		First(&task, "id = ?", taskID).Error; err != nil {
@@ -285,7 +283,6 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 	// Reload task with associations
 	h.db.
 		Preload("Creator").
-		Preload("Assignees").
 		Preload("Department").
 		Preload("Project").
 		First(&task, "id = ?", task.ID)
@@ -407,7 +404,6 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 	// Reload task with associations
 	h.db.
 		Preload("Creator").
-		Preload("Assignees").
 		Preload("Department").
 		Preload("Project").
 		First(&task, "id = ?", task.ID)
@@ -498,7 +494,6 @@ func (h *TaskHandler) UpdateTaskStatus(c *gin.Context) {
 	// Reload task with associations
 	h.db.
 		Preload("Creator").
-		Preload("Assignees").
 		Preload("Department").
 		Preload("Project").
 		First(&task, "id = ?", task.ID)
