@@ -114,11 +114,15 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Login failed' }));
-      throw new Error(error.message || 'Login failed');
+      const errorData = await response.json().catch(() => ({}));
+      const message = errorData.error?.message || errorData.message || 'Login failed';
+      throw new Error(message);
     }
 
-    const data: LoginResponse = await response.json();
+    const responseData = await response.json();
+    // Go backend wraps response in { success: true, data: {...} }
+    const data: LoginResponse = responseData.data || responseData;
+
     this.setTokens(data.access_token, data.refresh_token);
     this.setUser(data.user);
 
@@ -163,7 +167,9 @@ export class AuthService {
       throw new Error('Token refresh failed');
     }
 
-    const data: RefreshResponse = await response.json();
+    const responseData = await response.json();
+    // Go backend wraps response in { success: true, data: {...} }
+    const data: RefreshResponse = responseData.data || responseData;
     this.setTokens(data.access_token, tokens.refreshToken);
 
     return data.access_token;
@@ -195,7 +201,9 @@ export class AuthService {
         return null;
       }
 
-      const user: User = await response.json();
+      const responseData = await response.json();
+      // Go backend wraps response in { success: true, data: {...} }
+      const user: User = responseData.data || responseData;
       this.setUser(user);
       return user;
     } catch {
