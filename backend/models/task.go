@@ -41,7 +41,7 @@ type Task struct {
 	Tags                     pq.StringArray `gorm:"type:text[];default:'{}'" json:"tags"`
 	Attachments              pq.StringArray `gorm:"type:text[];default:'{}'" json:"attachments"`
 	ConfidenceScore          *float64       `gorm:"type:decimal(3,2)" json:"confidence_score,omitempty"`
-	Metadata                 string         `gorm:"type:jsonb" json:"metadata,omitempty"`
+	Metadata                 *string        `gorm:"type:jsonb" json:"metadata,omitempty"`
 
 	// Recurring task fields (not yet implemented in database)
 	IsRecurring              bool           `gorm:"-" json:"is_recurring,omitempty"`
