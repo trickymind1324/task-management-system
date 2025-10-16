@@ -1,0 +1,81 @@
+# Docker Compose for Task Management System (Project Synapse)
+# Runs: PostgreSQL, Go Backend, Next.js Frontend
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: synapse-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: synapse
+      POSTGRES_USER: synapse_user
+      POSTGRES_PASSWORD: synapse_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - synapse-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U synapse_user -d synapse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Go Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: synapse-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://synapse_user:synapse_password@postgres:5432/synapse?sslmode=disable
+      JWT_SECRET: development-secret-change-in-production
+      JWT_EXPIRY: 24h
+      REFRESH_TOKEN_EXPIRY: 168h
+      PORT: 8080
+      GIN_MODE: release
+      CORS_ORIGINS: http://localhost:3000,http://192.168.1.53:3000
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - synapse-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Next.js Frontend (Production Build)
+  frontend:
+    build:
+      context: ./prototype
+      dockerfile: Dockerfile
+    container_name: synapse-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_USE_GO_BACKEND: "true"
+      NEXT_PUBLIC_GO_API_URL: http://localhost:8080/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - synapse-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  synapse-network:
+    driver: bridge

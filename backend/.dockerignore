@@ -1,0 +1,22 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+CLAUDE.md
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode
+.idea
+
+# Test files
+*_test.go
+
+# Build artifacts
+main
+*.exe
