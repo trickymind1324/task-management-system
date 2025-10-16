@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,20 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
   const login = useAuthStore(state => state.login);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const checkAuth = useAuthStore(state => state.checkAuth);
+
+  // Check if already authenticated on mount
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
