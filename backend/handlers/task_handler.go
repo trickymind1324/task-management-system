@@ -155,6 +155,12 @@ func (h *TaskHandler) GetTasks(c *gin.Context) {
 		return
 	}
 
+	// Load assignees for all tasks
+	if err := h.loadTaskAssignees(&tasks); err != nil {
+		utils.RespondError(c, http.StatusInternalServerError, "SERVER_ERROR", "Failed to load task assignees", nil)
+		return
+	}
+
 	utils.RespondSuccessWithPagination(c, tasks, page, perPage, total)
 }
 
@@ -185,6 +191,14 @@ func (h *TaskHandler) GetTask(c *gin.Context) {
 		utils.RespondError(c, http.StatusForbidden, "FORBIDDEN", "You don't have permission to view this task", nil)
 		return
 	}
+
+	// Load assignees for this task
+	tasks := []models.Task{task}
+	if err := h.loadTaskAssignees(&tasks); err != nil {
+		utils.RespondError(c, http.StatusInternalServerError, "SERVER_ERROR", "Failed to load task assignees", nil)
+		return
+	}
+	task = tasks[0]
 
 	utils.RespondSuccess(c, http.StatusOK, task, "Task retrieved successfully")
 }
@@ -287,6 +301,7 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 
 	// Assign users if provided
 	if len(req.AssigneeIDs) > 0 {
+		// Validate all assignees exist
 		for _, assigneeID := range req.AssigneeIDs {
 			var user models.User
 			if err := tx.First(&user, "id = ?", assigneeID).Error; err != nil {
@@ -295,10 +310,14 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 				return
 			}
 		}
-		if err := tx.Model(&task).Association("Assignees").Append(req.AssigneeIDs); err != nil {
-			tx.Rollback()
-			utils.RespondError(c, http.StatusInternalServerError, "SERVER_ERROR", "Failed to assign users", nil)
-			return
+
+		// Manually insert into task_assignees table
+		for _, assigneeID := range req.AssigneeIDs {
+			if err := tx.Exec("INSERT INTO task_assignees (task_id, user_id) VALUES (?, ?)", task.ID, assigneeID).Error; err != nil {
+				tx.Rollback()
+				utils.RespondError(c, http.StatusInternalServerError, "SERVER_ERROR", "Failed to assign users", nil)
+				return
+			}
 		}
 	}
 
@@ -310,6 +329,14 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		Preload("Department").
 		Preload("Project").
 		First(&task, "id = ?", task.ID)
+
+	// Load assignees
+	tasks := []models.Task{task}
+	if err := h.loadTaskAssignees(&tasks); err != nil {
+		utils.RespondError(c, http.StatusInternalServerError, "SERVER_ERROR", "Failed to load task assignees", nil)
+		return
+	}
+	task = tasks[0]
 
 	utils.RespondSuccess(c, http.StatusCreated, task, "Task created successfully")
 }
@@ -406,8 +433,8 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 
 	// Update assignees if provided
 	if req.AssigneeIDs != nil {
-		// Clear existing assignees
-		if err := tx.Model(&task).Association("Assignees").Clear(); err != nil {
+		// Clear existing assignees from task_assignees table
+		if err := tx.Exec("DELETE FROM task_assignees WHERE task_id = ?", task.ID).Error; err != nil {
 			tx.Rollback()
 			utils.RespondError(c, http.StatusInternalServerError, "SERVER_ERROR", "Failed to update assignees", nil)
 			return
@@ -415,6 +442,7 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 
 		// Add new assignees
 		if len(req.AssigneeIDs) > 0 {
+			// Validate all assignees exist
 			for _, assigneeID := range req.AssigneeIDs {
 				var user models.User
 				if err := tx.First(&user, "id = ?", assigneeID).Error; err != nil {
@@ -423,10 +451,14 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 					return
 				}
 			}
-			if err := tx.Model(&task).Association("Assignees").Append(req.AssigneeIDs); err != nil {
-				tx.Rollback()
-				utils.RespondError(c, http.StatusInternalServerError, "SERVER_ERROR", "Failed to assign users", nil)
-				return
+
+			// Manually insert into task_assignees table
+			for _, assigneeID := range req.AssigneeIDs {
+				if err := tx.Exec("INSERT INTO task_assignees (task_id, user_id) VALUES (?, ?)", task.ID, assigneeID).Error; err != nil {
+					tx.Rollback()
+					utils.RespondError(c, http.StatusInternalServerError, "SERVER_ERROR", "Failed to assign users", nil)
+					return
+				}
 			}
 		}
 	}
@@ -439,6 +471,14 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 		Preload("Department").
 		Preload("Project").
 		First(&task, "id = ?", task.ID)
+
+	// Load assignees
+	tasks := []models.Task{task}
+	if err := h.loadTaskAssignees(&tasks); err != nil {
+		utils.RespondError(c, http.StatusInternalServerError, "SERVER_ERROR", "Failed to load task assignees", nil)
+		return
+	}
+	task = tasks[0]
 
 	utils.RespondSuccess(c, http.StatusOK, task, "Task updated successfully")
 }
@@ -536,10 +576,53 @@ func (h *TaskHandler) UpdateTaskStatus(c *gin.Context) {
 		Preload("Project").
 		First(&task, "id = ?", task.ID)
 
+	// Load assignees
+	tasks := []models.Task{task}
+	if err := h.loadTaskAssignees(&tasks); err != nil {
+		utils.RespondError(c, http.StatusInternalServerError, "SERVER_ERROR", "Failed to load task assignees", nil)
+		return
+	}
+	task = tasks[0]
+
 	utils.RespondSuccess(c, http.StatusOK, task, "Task status updated successfully")
 }
 
 // Helper functions
+
+// loadTaskAssignees loads assignee IDs from task_assignees table
+func (h *TaskHandler) loadTaskAssignees(tasks *[]models.Task) error {
+	if len(*tasks) == 0 {
+		return nil
+	}
+
+	// Collect all task IDs
+	taskIDs := make([]string, len(*tasks))
+	taskMap := make(map[string]*models.Task)
+	for i := range *tasks {
+		taskIDs[i] = (*tasks)[i].ID
+		taskMap[(*tasks)[i].ID] = &(*tasks)[i]
+	}
+
+	// Query assignees for all tasks
+	rows, err := h.db.Raw("SELECT task_id, user_id FROM task_assignees WHERE task_id = ANY(?)", taskIDs).Rows()
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	// Populate assignees
+	for rows.Next() {
+		var taskID, userID string
+		if err := rows.Scan(&taskID, &userID); err != nil {
+			return err
+		}
+		if task, ok := taskMap[taskID]; ok {
+			task.Assignees = append(task.Assignees, userID)
+		}
+	}
+
+	return rows.Err()
+}
 
 func canAccessTask(task models.Task, userID, userRole string, userDepartmentID interface{}) bool {
 	// Admins can access all tasks

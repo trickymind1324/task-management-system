@@ -318,7 +318,6 @@ func (h *UserHandler) GetUserTasks(c *gin.Context) {
 	var tasks []models.Task
 	if err := query.
 		Preload("Creator").
-		Preload("Assignees").
 		Preload("Department").
 		Preload("Project").
 		Order("created_at DESC").
@@ -329,5 +328,46 @@ func (h *UserHandler) GetUserTasks(c *gin.Context) {
 		return
 	}
 
+	// Load assignees for all tasks
+	if err := h.loadTaskAssignees(&tasks); err != nil {
+		utils.RespondError(c, http.StatusInternalServerError, "SERVER_ERROR", "Failed to load task assignees", nil)
+		return
+	}
+
 	utils.RespondSuccessWithPagination(c, tasks, page, perPage, total)
+}
+
+// loadTaskAssignees loads assignee IDs from task_assignees table
+func (h *UserHandler) loadTaskAssignees(tasks *[]models.Task) error {
+	if len(*tasks) == 0 {
+		return nil
+	}
+
+	// Collect all task IDs
+	taskIDs := make([]string, len(*tasks))
+	taskMap := make(map[string]*models.Task)
+	for i := range *tasks {
+		taskIDs[i] = (*tasks)[i].ID
+		taskMap[(*tasks)[i].ID] = &(*tasks)[i]
+	}
+
+	// Query assignees for all tasks
+	rows, err := h.db.Raw("SELECT task_id, user_id FROM task_assignees WHERE task_id = ANY(?)", taskIDs).Rows()
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	// Populate assignees
+	for rows.Next() {
+		var taskID, userID string
+		if err := rows.Scan(&taskID, &userID); err != nil {
+			return err
+		}
+		if task, ok := taskMap[taskID]; ok {
+			task.Assignees = append(task.Assignees, userID)
+		}
+	}
+
+	return rows.Err()
 }
