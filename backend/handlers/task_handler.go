@@ -601,27 +601,27 @@ func (h *TaskHandler) loadTaskAssignees(tasks *[]models.Task) error {
 	for i := range *tasks {
 		taskIDs[i] = (*tasks)[i].ID
 		taskMap[(*tasks)[i].ID] = &(*tasks)[i]
+		// Initialize empty slice to avoid null
+		(*tasks)[i].Assignees = []string{}
 	}
 
-	// Query assignees for all tasks
-	rows, err := h.db.Raw("SELECT task_id, user_id FROM task_assignees WHERE task_id = ANY(?)", taskIDs).Rows()
-	if err != nil {
+	// Query assignees for all tasks using IN clause
+	var results []struct {
+		TaskID string `gorm:"column:task_id"`
+		UserID string `gorm:"column:user_id"`
+	}
+	if err := h.db.Raw("SELECT task_id, user_id FROM task_assignees WHERE task_id IN ?", taskIDs).Scan(&results).Error; err != nil {
 		return err
 	}
-	defer rows.Close()
 
 	// Populate assignees
-	for rows.Next() {
-		var taskID, userID string
-		if err := rows.Scan(&taskID, &userID); err != nil {
-			return err
-		}
-		if task, ok := taskMap[taskID]; ok {
-			task.Assignees = append(task.Assignees, userID)
+	for _, result := range results {
+		if task, ok := taskMap[result.TaskID]; ok {
+			task.Assignees = append(task.Assignees, result.UserID)
 		}
 	}
 
-	return rows.Err()
+	return nil
 }
 
 func canAccessTask(task models.Task, userID, userRole string, userDepartmentID interface{}) bool {

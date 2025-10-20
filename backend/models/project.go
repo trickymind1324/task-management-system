@@ -6,8 +6,8 @@ package models
 import "time"
 
 type Project struct {
-	ID           string      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	ProjectID    string      `gorm:"type:varchar(50);uniqueIndex" json:"project_id"`
+	ID           string      `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id" json:"id"`
+	ProjectID    string      `gorm:"type:varchar(50);uniqueIndex;column:code" json:"project_id"`
 	Name         string      `gorm:"type:varchar(255);not null" json:"name"`
 	Description  *string     `gorm:"type:text" json:"description,omitempty"`
 	Status       string      `gorm:"type:varchar(20);not null;default:'Active'" json:"status"`

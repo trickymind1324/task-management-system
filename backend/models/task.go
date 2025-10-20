@@ -24,9 +24,9 @@ type Task struct {
 
 	// Organization
 	DepartmentID             *string        `gorm:"type:uuid" json:"department_id,omitempty"`
-	Department               *Department    `gorm:"foreignKey:DepartmentID" json:"department,omitempty"`
+	Department               *Department    `gorm:"foreignKey:DepartmentID;references:ID" json:"department,omitempty"`
 	ProjectID                *string        `gorm:"type:uuid" json:"project_id,omitempty"`
-	Project                  *Project       `gorm:"foreignKey:ProjectID" json:"project,omitempty"`
+	Project                  *Project       `gorm:"foreignKey:ProjectID;references:ID" json:"project,omitempty"`
 
 	// Dates
 	DueDate                  *time.Time     `json:"due_date,omitempty"`
