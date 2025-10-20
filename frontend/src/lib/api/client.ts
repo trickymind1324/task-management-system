@@ -148,9 +148,19 @@ export class ApiClient {
   private transformTaskFromBackend(task: any): Task {
     return {
       ...task,
+      task_id: task.id || task.task_id,
       assignees: task.assignee_ids || [],
       department: task.department_id || null,
-      task_id: task.id || task.task_id,
+      creator: task.creator_id || task.creator,
+      creation_date: task.created_at || task.creation_date,
+      last_modified: task.updated_at || task.last_modified,
+      project: task.project_id || task.project,
+      dependencies: task.dependencies || [],
+      blocks: task.blocks || [],
+      parent_task: task.parent_task || null,
+      attachments: task.attachments || [],
+      comments: task.comments || [],
+      metadata: task.metadata || {},
     };
   }
 
