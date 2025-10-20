@@ -44,9 +44,7 @@ const applyFilters = (tasks: Task[], filters: TaskFilters): Task[] => {
 
 export const useTaskStore = create<TaskState>((set, get) => ({
   tasks: [],
-  get filteredTasks() {
-    return applyFilters(get().tasks, get().filters);
-  },
+  filteredTasks: [],
   selectedTaskId: null,
   filters: {},
   isLoading: false,
@@ -56,7 +54,8 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const tasks = await apiClient.getTasks(get().filters);
-      set({ tasks, isLoading: false });
+      const filteredTasks = applyFilters(tasks, get().filters);
+      set({ tasks, filteredTasks, isLoading: false });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch tasks';
       set({ error: message, isLoading: false });
@@ -67,10 +66,11 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const newTask = await apiClient.createTask(taskData);
-      set((state) => ({
-        tasks: [...state.tasks, newTask],
-        isLoading: false,
-      }));
+      set((state) => {
+        const tasks = [...state.tasks, newTask];
+        const filteredTasks = applyFilters(tasks, state.filters);
+        return { tasks, filteredTasks, isLoading: false };
+      });
       return newTask;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to create task';
@@ -84,10 +84,11 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     try {
       const updated = await apiClient.updateTask(id, updates);
       if (updated) {
-        set((state) => ({
-          tasks: state.tasks.map((t) => (t.task_id === id ? updated : t)),
-          isLoading: false,
-        }));
+        set((state) => {
+          const tasks = state.tasks.map((t) => (t.task_id === id ? updated : t));
+          const filteredTasks = applyFilters(tasks, state.filters);
+          return { tasks, filteredTasks, isLoading: false };
+        });
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update task';
@@ -100,11 +101,16 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await apiClient.deleteTask(id);
-      set((state) => ({
-        tasks: state.tasks.filter((t) => t.task_id !== id),
-        selectedTaskId: state.selectedTaskId === id ? null : state.selectedTaskId,
-        isLoading: false,
-      }));
+      set((state) => {
+        const tasks = state.tasks.filter((t) => t.task_id !== id);
+        const filteredTasks = applyFilters(tasks, state.filters);
+        return {
+          tasks,
+          filteredTasks,
+          selectedTaskId: state.selectedTaskId === id ? null : state.selectedTaskId,
+          isLoading: false,
+        };
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to delete task';
       set({ error: message, isLoading: false });
@@ -113,14 +119,19 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   },
 
   setFilters: (newFilters) => {
-    set((state) => ({
-      filters: { ...state.filters, ...newFilters },
-    }));
+    set((state) => {
+      const filters = { ...state.filters, ...newFilters };
+      const filteredTasks = applyFilters(state.tasks, filters);
+      return { filters, filteredTasks };
+    });
     get().fetchTasks();
   },
 
   clearFilters: () => {
-    set({ filters: {} });
+    set((state) => {
+      const filteredTasks = applyFilters(state.tasks, {});
+      return { filters: {}, filteredTasks };
+    });
     get().fetchTasks();
   },
 

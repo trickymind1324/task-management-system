@@ -106,12 +106,14 @@ export class ApiClient {
   // Task methods
   async getTasks(filters?: TaskFilters): Promise<Task[]> {
     const queryParams = buildTaskQueryParams(filters);
-    return apiRequest<Task[]>(`${API_ENDPOINTS.tasks}${queryParams}`);
+    const tasks = await apiRequest<any[]>(`${API_ENDPOINTS.tasks}${queryParams}`);
+    return tasks.map(this.transformTaskFromBackend);
   }
 
   async getTaskById(id: string): Promise<Task | null> {
     try {
-      return await apiRequest<Task>(API_ENDPOINTS.task(id));
+      const task = await apiRequest<any>(API_ENDPOINTS.task(id));
+      return this.transformTaskFromBackend(task);
     } catch (error) {
       if (error instanceof APIError && error.status === 404) {
         return null;
@@ -121,24 +123,33 @@ export class ApiClient {
   }
 
   async createTask(taskData: CreateTaskDTO): Promise<Task> {
-    return apiRequest<Task>(API_ENDPOINTS.tasks, {
+    const task = await apiRequest<any>(API_ENDPOINTS.tasks, {
       method: 'POST',
       body: JSON.stringify(taskData),
     });
+    return this.transformTaskFromBackend(task);
   }
 
   async updateTask(id: string, updates: UpdateTaskDTO): Promise<Task | null> {
     try {
-      return await apiRequest<Task>(API_ENDPOINTS.task(id), {
+      const task = await apiRequest<any>(API_ENDPOINTS.task(id), {
         method: 'PATCH',
         body: JSON.stringify(updates),
       });
+      return this.transformTaskFromBackend(task);
     } catch (error) {
       if (error instanceof APIError && error.status === 404) {
         return null;
       }
       throw error;
     }
+  }
+
+  private transformTaskFromBackend(task: any): Task {
+    return {
+      ...task,
+      assignees: task.assignee_ids || [],
+    };
   }
 
   async deleteTask(id: string): Promise<boolean> {

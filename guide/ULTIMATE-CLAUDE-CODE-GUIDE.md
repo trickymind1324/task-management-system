@@ -55,16 +55,6 @@ You have three main options:
    - Use within Cursor, Windsurf, or VS Code
    - Best for: Existing IDE workflows
 
-### Choose Your Subscription Plan
-
-| Plan | Cost | Best For |
-|------|------|----------|
-| **Pro** | $20/month | Learning, small projects |
-| **Max** | $100/month | Serious developers (5x higher limits) |
-| **Max 20X** | $200/month | Heavy users coding all day |
-| **API** | Variable | Only if company-paid (expensive) |
-
-**Our Recommendation:** Start with Pro, upgrade to Max when you're productive.
 
 ### Essential First-Time Setup
 
