@@ -2,7 +2,7 @@
 // ABOUTME: Loads department data and shows color-coded badge (Marketing=Red, Engineering=Blue, Finance=Green)
 
 import { useEffect, useState } from 'react';
-import { mockDataStore } from '@/lib/data/mock-store';
+import { apiClient } from '@/lib/api/client';
 import type { Department } from '@/types';
 
 interface DepartmentBadgeProps {
@@ -22,9 +22,13 @@ export function DepartmentBadge({ departmentId, size = 'sm' }: DepartmentBadgePr
   useEffect(() => {
     const loadDepartment = async () => {
       if (!departmentId) return;
-      const departments = await mockDataStore.getDepartments();
-      const dept = departments.find(d => d.department_id === departmentId);
-      setDepartment(dept || null);
+      try {
+        const dept = await apiClient.getDepartmentById(departmentId);
+        setDepartment(dept);
+      } catch (error) {
+        console.error('Failed to load department:', error);
+        setDepartment(null);
+      }
     };
     loadDepartment();
   }, [departmentId]);
