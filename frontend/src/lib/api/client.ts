@@ -149,6 +149,8 @@ export class ApiClient {
     return {
       ...task,
       assignees: task.assignee_ids || [],
+      department: task.department_id || null,
+      task_id: task.id || task.task_id,
     };
   }
 
