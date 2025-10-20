@@ -11,9 +11,9 @@ interface DepartmentBadgeProps {
 }
 
 const departmentColors: Record<string, string> = {
-  'dept-001': 'bg-red-100 text-red-700',     // Marketing
-  'dept-002': 'bg-blue-100 text-blue-700',   // Engineering
-  'dept-003': 'bg-green-100 text-green-700', // Finance
+  'b4e8c1a0-1234-5678-9abc-def012345001': 'bg-red-100 text-red-700',     // Marketing
+  'b4e8c1a0-1234-5678-9abc-def012345002': 'bg-blue-100 text-blue-700',   // Engineering
+  'b4e8c1a0-1234-5678-9abc-def012345003': 'bg-green-100 text-green-700', // Finance
 };
 
 export function DepartmentBadge({ departmentId, size = 'sm' }: DepartmentBadgeProps) {
